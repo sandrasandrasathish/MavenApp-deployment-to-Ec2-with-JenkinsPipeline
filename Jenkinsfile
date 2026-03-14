@@ -3,7 +3,7 @@ pipeline {
 
     tools {
         maven 'maven-3.9'
-        jdk 'JDK11'
+        jdk 'jdk11'
     }
 
     stages {
@@ -11,7 +11,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                    url: 'https://github.com/sandrasandrasathish/MavenApp-deployment-to-Ec2-with-JenkinsPipeline.git'
+                url: 'https://github.com/sandrasandrasathish/MavenApp-deployment-to-Ec2-with-JenkinsPipeline.git'
             }
         }
 
@@ -23,17 +23,19 @@ pipeline {
 
         stage('Deploy to EC2') {
             steps {
-                sshagent(['ec2-ssh-key']) {
-                    bat '''
-                    echo Copying JAR to EC2...
-                    scp -o StrictHostKeyChecking=no target/demo-1.0.0.jar ubuntu@54.174.123.249:/opt/app/
+                bat '''
+                echo Copying JAR to EC2...
 
-                    echo Starting application on EC2...
-                    ssh -o StrictHostKeyChecking=no ubuntu@54.174.123.249 "pkill -f demo-1.0.0.jar || true"
+                scp -i C:\\Users\\sandra\\Desktop\\yay.pem -o StrictHostKeyChecking=no target\\demo-1.0.0.jar ubuntu@54.174.123.249:/opt/app/
 
-                    ssh -o StrictHostKeyChecking=no ubuntu@54.174.123.249 "nohup java -jar /opt/app/demo-1.0.0.jar > /opt/app/app.log 2>&1 &"
-                    '''
-                }
+                echo Stopping old app...
+
+                ssh -i C:\\Users\\sandra\\Desktop\\yay.pem -o StrictHostKeyChecking=no ubuntu@54.174.123.249 "pkill -f demo-1.0.0.jar || true"
+
+                echo Starting new app...
+
+                ssh -i C:\\Users\\sandra\\Desktop\\yay.pem -o StrictHostKeyChecking=no ubuntu@54.174.123.249 "nohup java -jar /opt/app/demo-1.0.0.jar > /opt/app/app.log 2>&1 &"
+                '''
             }
         }
     }
