@@ -17,27 +17,21 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'mvn clean package'
+                bat 'mvn clean package'
             }
         }
 
         stage('Deploy to EC2') {
             steps {
                 sshagent(['ec2-ssh-key']) {
-                    sh '''
-                        echo "Copying artifact to EC2..."
-                        scp -o StrictHostKeyChecking=no \
-                            target/demo-1.0.0.jar \
-                            ubuntu@34.224.84.252:/opt/app/
+                    bat '''
+                    echo Copying JAR to EC2...
+                    scp -o StrictHostKeyChecking=no target/demo-1.0.0.jar ubuntu@54.174.123.249:/opt/app/
 
-                        echo "Starting application on EC2..."
-                        ssh -o StrictHostKeyChecking=no ubuntu@54.174.123.249 << 'EOF'
-                            pkill -f demo-1.0.0.jar || true
-                            nohup java -jar /opt/app/demo-1.0.0.jar \
-                                > /opt/app/app.log 2>&1 &
-                        EOF
+                    echo Starting application on EC2...
+                    ssh -o StrictHostKeyChecking=no ubuntu@54.174.123.249 "pkill -f demo-1.0.0.jar || true"
 
-                        echo "Deployment command executed successfully"
+                    ssh -o StrictHostKeyChecking=no ubuntu@54.174.123.249 "nohup java -jar /opt/app/demo-1.0.0.jar > /opt/app/app.log 2>&1 &"
                     '''
                 }
             }
